@@ -4,7 +4,7 @@ ftyp : 20, 0x8, false
  compatible_brands : MSNV
  compatible_brands : isom
  compatible_brands : mp42
-*uuid : 140, 0x24, false
+?uuid : 140, 0x24, false
 mdat : 5331162, 0xb8, false
 moov : 6701, 0x51599a, false
  mvhd : 96, 0x5159a6, false
@@ -22,41 +22,41 @@ moov : 6701, 0x51599a, false
   pre_defined       : 0, 0, 0, 0, 0, 0
   next_track_ID     : 3
  trak : 3805, 0x515a0e, false
-  *tkhd : 84, 0x515a16, false
+  tkhd : 84, 0x515a16, false
   edts : 28, 0x515a72, false
-   *elst : 20, 0x515a7a, false
+   ?elst : 20, 0x515a7a, false
   mdia : 3617, 0x515a96, false
-   *mdhd : 24, 0x515a9e, false
-   *hdlr : 44, 0x515abe, false
+   mdhd : 24, 0x515a9e, false
+   hdlr : 44, 0x515abe, false
    minf : 3525, 0x515af2, false
-    *vmhd : 12, 0x515afa, false
+    vmhd : 12, 0x515afa, false
     dinf : 28, 0x515b0e, false
-     *dref : 20, 0x515b16, false
+     dref : 20, 0x515b16, false
     stbl : 3461, 0x515b32, false
-     *stsd : 165, 0x515b3a, false
-     *stts : 16, 0x515be7, false
-     *ctts : 1768, 0x515bff, false
-     *stsc : 20, 0x5162ef, false
-     *stsz : 1332, 0x51630b, false
-     *stco : 52, 0x516847, false
-     *stss : 52, 0x516883, false
-  *uuid : 44, 0x5168bf, false
+     ?stsd : 165, 0x515b3a, false
+     ?stts : 16, 0x515be7, false
+     ?ctts : 1768, 0x515bff, false
+     ?stsc : 20, 0x5162ef, false
+     ?stsz : 1332, 0x51630b, false
+     ?stco : 52, 0x516847, false
+     ?stss : 52, 0x516883, false
+  ?uuid : 44, 0x5168bf, false
  trak : 2671, 0x5168f3, false
-  *tkhd : 84, 0x5168fb, false
+  tkhd : 84, 0x5168fb, false
   edts : 40, 0x516957, false
-   *elst : 32, 0x51695f, false
+   ?elst : 32, 0x51695f, false
   mdia : 2471, 0x516987, false
-   *mdhd : 24, 0x51698f, false
-   *hdlr : 44, 0x5169af, false
+   mdhd : 24, 0x51698f, false
+   hdlr : 44, 0x5169af, false
    minf : 2379, 0x5169e3, false
-    *smhd : 8, 0x5169eb, false
+    smhd : 8, 0x5169eb, false
     dinf : 28, 0x5169fb, false
-     *dref : 20, 0x516a03, false
+     dref : 20, 0x516a03, false
     stbl : 2319, 0x516a1f, false
-     *stsd : 83, 0x516a27, false
-     *stts : 16, 0x516a82, false
-     *stsc : 56, 0x516a9a, false
-     *stsz : 2072, 0x516ada, false
-     *stco : 52, 0x5172fa, false
-  *uuid : 44, 0x517336, false
- *uuid : 93, 0x51736a, false
+     ?stsd : 83, 0x516a27, false
+     ?stts : 16, 0x516a82, false
+     ?stsc : 56, 0x516a9a, false
+     ?stsz : 2072, 0x516ada, false
+     ?stco : 52, 0x5172fa, false
+  ?uuid : 44, 0x517336, false
+ ?uuid : 93, 0x51736a, false
