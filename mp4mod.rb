@@ -304,7 +304,58 @@ module BaseMedia
   end
   
   class Box_tkhd < Box
-    # TODO ココ
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@creation_time     => [4, "N", 1]},
+      {:@modification_time => [4, "N", 1]},
+      {:@track_ID          => [4, "N", 1]},
+      {:@reserved          => [4, "N", 1]},
+      {:@duration          => [4, "N", 1]},
+      {:@reserved32        => [4, "N", 2]},
+      {:@layer             => [2, "n", 1]},
+      {:@alternate_group   => [2, "n", 1]},
+      {:@volume            => [2, "n", 1]},
+      {:@reserved16        => [2, "n", 1]},
+      {:@matrix            => [4, "N", 9]},
+      {:@width             => [4, "N", 1]},
+      {:@height            => [4, "N", 1]},
+      ],
+      # Version 1
+      [
+      {:@creation_time     => [8, :NN, 1]},
+      {:@modification_time => [8, :NN, 1]},
+      {:@track_ID          => [4, "N", 1]},
+      {:@reserved          => [4, "N", 1]},
+      {:@duration          => [8, :NN, 1]},
+      {:@reserved32        => [4, "N", 2]},
+      {:@layer             => [2, "n", 1]},
+      {:@alternate_group   => [2, "n", 1]},
+      {:@volume            => [2, "n", 1]},
+      {:@reserved16        => [2, "n", 1]},
+      {:@matrix            => [4, "N", 9]},
+      {:@width             => [4, "N", 1]},
+      {:@height            => [4, "N", 1]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "track_ID          : #{@track_ID}"
+      s += "\n " + " " * @depth + "reserved          : #{@reserved}"
+      s += "\n " + " " * @depth + "duration          : #{@duration}"
+      s += "\n " + " " * @depth + "reserved32        : #{@reserved32.join(', ')}"
+      s += "\n " + " " * @depth + "layer             : #{@layer}"
+      s += "\n " + " " * @depth + "alternate_group   : #{@alternate_group}"
+      s += "\n " + " " * @depth + "volume            : 0x#{@volume.to_s(16)}"
+      s += "\n " + " " * @depth + "reserved16        : #{@reserved16}"
+      s += "\n " + " " * @depth + "matrix            : #{@matrix.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
+      s += "\n " + " " * @depth + "width             : #{@width /65536.0}"
+      s += "\n " + " " * @depth + "height            : #{@height/65536.0}"
+    end
   end
   
   class Box_edts < Box_no_fields
@@ -314,7 +365,41 @@ module BaseMedia
   end
   
   class Box_mdhd < Box
-    # TODO ココ
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@creation_time     => [4, "N", 1]},
+      {:@modification_time => [4, "N", 1]},
+      {:@timescale         => [4, "N", 1]},
+      {:@duration          => [4, "N", 1]},
+      {:@language          => [2, "n", 1]},
+      {:@pre_defined       => [2, "n", 1]},
+      ],
+      # Version 1
+      [
+      {:@creation_time     => [8, :NN, 1]},
+      {:@modification_time => [8, :NN, 1]},
+      {:@timescale         => [4, "N", 1]},
+      {:@duration          => [8, :NN, 1]},
+      {:@language          => [2, "n", 1]},
+      {:@pre_defined       => [2, "n", 1]},
+      ],
+    ]
+
+    def lang2ascii(l)
+      "#{((l>>10)|0x60).chr}#{(((l>>5)&31)|0x60).chr}#{((l&31)|0x60).chr}"
+    end
+
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "timescale         : #{@timescale}"
+      s += "\n " + " " * @depth + "duration          : #{@duration}"
+      s += "\n " + " " * @depth + "language          : #{lang2ascii(@language)}"
+      s += "\n " + " " * @depth + "pre_defined       : #{@pre_defined}"
+    end
   end
   
   class Box_hdlr < Box
