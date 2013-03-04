@@ -64,14 +64,14 @@ module BaseMedia
   end
 
     
-  def self.parse_boxes(f, size, depth)
+  def self.parse_boxes(f, size, depth=0)
     boxes = Array.new
     
     start_pos = f.tell
     while (f.tell - start_pos < size && f.eof? == false)
-      self.parse_box(f, depth) { |b|
+      self.parse_box(f, depth) do |b|
         boxes.push b
-      }
+      end
     end
 
     if f.tell - start_pos != size
@@ -151,7 +151,7 @@ module BaseMedia
       end
       
       box_offset = 0
-      fields_template.each { |t|
+      fields_template.each do |t|
         field_name = t.keys[0]
         field_size = t.values[0][0]
         field_type = t.values[0][1]
@@ -161,21 +161,27 @@ module BaseMedia
           field_num = (@size - box_offset) / field_size
         end
         
-        # TODO field_type = :NN 非対応！
         field = nil
         if field_num == 1
-          field = f.read(field_size).unpack(field_type)[0]
-          box_offset += field_size
-        else
+          if field_type != :NN
+            field = f.read(field_size).unpack(field_type)[0]
+            box_offset += field_size
+          else
+            # 64bit network byte order
+            fields = f.read(field_size).unpack("N")
+            field = (fields[0] << 32) + fields[1]
+            box_offset += field_size
+          end
+         else
           field = Array.new(field_num)
-          field_num.times { |i|
+          field_num.times do |i|
             field[i] = f.read(field_size).unpack(field_type)[0]
             box_offset += field_size
-          }
+          end
         end
         
         self.instance_variable_set(field_name, field)
-      }
+      end
       
       # TODO @payload に保存するか skip するか？
       f.seek(@size - box_offset, IO::SEEK_CUR)
@@ -206,9 +212,9 @@ module BaseMedia
       s = fields_to_s(s)
       
       if @payload.class == Array
-        @payload.each { |b|
+        @payload.each do |b|
           s += "\n#{b.to_s}"
-        }
+        end
       end
       
       s
@@ -233,9 +239,9 @@ module BaseMedia
     def fields_to_s(s)
       s += "\n " + " " * @depth + "major_brand       : #{@major_brand}"
       s += "\n " + " " * @depth + "minor_version     : #{@minor_version}"
-      @compatible_brands.each { |i|
+      @compatible_brands.each do |i|
         s += "\n " + " " * @depth + "compatible_brands : #{i}"
-      }
+      end
       s
     end
   end
@@ -286,8 +292,8 @@ module BaseMedia
     def fields_to_s(s)
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).to_s}"
-      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
+      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
       s += "\n " + " " * @depth + "timescale         : #{@timescale}"
       s += "\n " + " " * @depth + "duration          : #{@duration}"
       s += "\n " + " " * @depth + "rate              : 0x#{@rate.to_s(16)}"
@@ -342,8 +348,8 @@ module BaseMedia
     def fields_to_s(s)
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).to_s}"
-      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
+      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
       s += "\n " + " " * @depth + "track_ID          : #{@track_ID}"
       s += "\n " + " " * @depth + "reserved          : #{@reserved}"
       s += "\n " + " " * @depth + "duration          : #{@duration}"
@@ -393,8 +399,8 @@ module BaseMedia
     def fields_to_s(s)
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).to_s}"
-      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).to_s}"
+      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
+      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
       s += "\n " + " " * @depth + "timescale         : #{@timescale}"
       s += "\n " + " " * @depth + "duration          : #{@duration}"
       s += "\n " + " " * @depth + "language          : #{lang2ascii(@language)}"
@@ -437,14 +443,14 @@ class Mp4File
   include BaseMedia
 
   def initialize(f, size)
-    @boxes = BaseMedia::parse_boxes(f, size, 0)
+    @boxes = BaseMedia::parse_boxes(f, size)
   end
 
   def to_s
     s = ''
-    @boxes.each { |b|
+    @boxes.each do |b|
       s += "#{b.to_s}\n"
-    }
+    end
     s
   end
 end
@@ -457,7 +463,7 @@ if ARGV.length == 0
   exit(1)
 end
 
-File.open(ARGV[0], "rb") { |f|
+File.open(ARGV[0], "rb") do |f|
   mp4_file = Mp4File.new(f, File::size(f.path))
   puts mp4_file.to_s
-}
+end

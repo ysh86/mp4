@@ -10,8 +10,8 @@ moov : 6701, 0x51599a, false
  mvhd : 96, 0x5159a6, false
   FullBox version : 0
   FullBox flags   : 0, 0, 0
-  creation_time     : Tue Jan 19 13:24:19 +0900 2010
-  modification_time : Tue Jan 19 13:24:19 +0900 2010
+  creation_time     : 2010-01-19 13:24:19 +0900
+  modification_time : 2010-01-19 13:24:19 +0900
   timescale         : 90000
   duration          : 990990
   rate              : 0x10000
@@ -25,8 +25,8 @@ moov : 6701, 0x51599a, false
   tkhd : 80, 0x515a1a, false
    FullBox version : 0
    FullBox flags   : 0, 0, 7
-   creation_time     : Tue Jan 19 13:24:19 +0900 2010
-   modification_time : Tue Jan 19 13:24:19 +0900 2010
+   creation_time     : 2010-01-19 13:24:19 +0900
+   modification_time : 2010-01-19 13:24:19 +0900
    track_ID          : 1
    reserved          : 0
    duration          : 990990
@@ -44,8 +44,8 @@ moov : 6701, 0x51599a, false
    mdhd : 20, 0x515aa2, false
     FullBox version : 0
     FullBox flags   : 0, 0, 0
-    creation_time     : Tue Jan 19 13:24:19 +0900 2010
-    modification_time : Tue Jan 19 13:24:19 +0900 2010
+    creation_time     : 2010-01-19 13:24:19 +0900
+    modification_time : 2010-01-19 13:24:19 +0900
     timescale         : 30000
     duration          : 330330
     language          : jpn
@@ -68,8 +68,8 @@ moov : 6701, 0x51599a, false
   tkhd : 80, 0x5168ff, false
    FullBox version : 0
    FullBox flags   : 0, 0, 7
-   creation_time     : Tue Jan 19 13:24:19 +0900 2010
-   modification_time : Tue Jan 19 13:24:19 +0900 2010
+   creation_time     : 2010-01-19 13:24:19 +0900
+   modification_time : 2010-01-19 13:24:19 +0900
    track_ID          : 2
    reserved          : 0
    duration          : 989616
@@ -87,8 +87,8 @@ moov : 6701, 0x51599a, false
    mdhd : 20, 0x516993, false
     FullBox version : 0
     FullBox flags   : 0, 0, 0
-    creation_time     : Tue Jan 19 13:24:19 +0900 2010
-    modification_time : Tue Jan 19 13:24:19 +0900 2010
+    creation_time     : 2010-01-19 13:24:19 +0900
+    modification_time : 2010-01-19 13:24:19 +0900
     timescale         : 48000
     duration          : 527360
     language          : jpn
