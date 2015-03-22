@@ -436,6 +436,173 @@ module BaseMedia
   class Box_stsdd < Box_no_fields
     # TODO ここだ！
   end
+
+  
+  class Box_moof < Box_no_fields
+  end
+  
+  class Box_mvex < Box_no_fields
+  end
+  
+  class Box_trex < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@track_ID                 => [4, "N", 1]},
+      {:@default_sample_description_index => [4, "N", 1]},
+      {:@default_sample_duration  => [4, "N", 1]},
+      {:@default_sample_size      => [4, "N", 1]},
+      {:@default_sample_flags     => [4, "N", 1]},
+      ],
+      # dummy
+      [
+      {:@track_ID          => [4, "N", 1]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "track_ID                         : #{@track_ID}"
+      s += "\n " + " " * @depth + "default_sample_description_index : #{@default_sample_description_index}"
+      s += "\n " + " " * @depth + "default_sample_duration          : #{@default_sample_duration}"
+      s += "\n " + " " * @depth + "default_sample_size              : #{@default_sample_size}"
+      s += "\n " + " " * @depth + "default_sample_flags             : #{@default_sample_flags}"
+    end
+  end
+  
+  class Box_sidx < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@reference_ID               => [4, "N", 1]},
+      {:@timescale                  => [4, "N", 1]},
+      {:@earliest_presentation_time => [4, "N", 1]},
+      {:@first_offset               => [4, "N", 1]},
+      {:@reserved                   => [2, "n", 1]},
+      {:@reference_count            => [2, "n", 1]},
+      {:@references                 => [4, "N*", :EOB]},
+      ],
+      # Version 1
+      [
+      {:@reference_ID               => [4, "N", 1]},
+      {:@timescale                  => [4, "N", 1]},
+      {:@earliest_presentation_time => [4, :NN, 1]},
+      {:@first_offset               => [4, :NN, 1]},
+      {:@reserved                   => [2, "n", 1]},
+      {:@reference_count            => [2, "n", 1]},
+      {:@references                 => [4, "N*", :EOB]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "reference_ID               : #{@reference_ID}"
+      s += "\n " + " " * @depth + "timescale                  : #{@timescale}"
+      s += "\n " + " " * @depth + "earliest_presentation_time : #{@earliest_presentation_time}"
+      s += "\n " + " " * @depth + "first_offset               : #{@first_offset}"
+      s += "\n " + " " * @depth + "reserved                   : #{@reserved}"
+      s += "\n " + " " * @depth + "reference_count            : #{@reference_count}"
+    end
+  end
+  
+  class Box_mfhd < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@sequence_number     => [4, "N", 1]},
+      ],
+      # dummy
+      [
+      {:@sequence_number     => [4, "N", 1]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "sequence_number : #{@sequence_number}"
+    end
+  end
+  
+  class Box_traf < Box_no_fields
+  end
+  
+  class Box_tfhd < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@track_ID                 => [4, "N", 1]},
+      # all the following are optional fields
+      #{:@base_data_offset         => [8, :NN, 1]},
+      #{:@sample_description_index => [4, "N", 1]},
+      {:@default_sample_duration  => [4, "N", 1]},
+      #{:@default_sample_size      => [4, "N", 1]},
+      #{:@default_sample_flags     => [4, "N", 1]},
+      ],
+      # dummy
+      [
+      {:@track_ID          => [4, "N", 1]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "track_ID                : #{@track_ID}"
+      s += "\n " + " " * @depth + "default_sample_duration : #{@default_sample_duration}"
+    end
+  end
+  
+  class Box_tfdt < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@baseMediaDecodeTime => [4, "N", 1]},
+      ],
+      # Version 1
+      [
+      {:@baseMediaDecodeTime => [8, :NN, 1]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "baseMediaDecodeTime : #{@baseMediaDecodeTime}"
+    end
+  end
+  
+  class Box_trun < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:@sample_count => [4, "N", 1]},
+      # the following are optional fields
+      {:@data_offset => [4, "N", 1]},
+      #{:@first_sample_flags => [4, "N", 1]},
+      # all fields in the following array are optional
+      {:@samples => [4, "N*", :EOB]},
+      ],
+      # Version 1
+      [
+      {:@sample_count => [4, "N", 1]},
+      # the following are optional fields
+      {:@data_offset => [4, "N", 1]},
+      #{:@first_sample_flags => [4, "N", 1]},
+      # all fields in the following array are optional
+      {:@samples => [4, "N*", :EOB]},
+      ],
+    ]
+    
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "sample_count : #{@sample_count}"
+      s += "\n " + " " * @depth + "data_offset  : 0x#{@data_offset.to_s(16)}"
+    end
+  end
 end
   
 
