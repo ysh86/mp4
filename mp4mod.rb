@@ -407,9 +407,24 @@ module BaseMedia
       s += "\n " + " " * @depth + "pre_defined       : #{@pre_defined}"
     end
   end
-  
+
   class Box_hdlr < Box
-    # TODO ココ
+    TEMPLATE = [[
+      {:@pre_defined  => [4, "N" , 1   ]},
+      {:@handler_type => [4, "a*", 1   ]},
+      {:@handler_type => [4, "a*", 1   ]},
+      {:@reserved     => [4, "N" , 2   ]},
+      {:@name         => [1, "a*", :EOB]},
+    ]]
+
+    def fields_to_s(s)
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "pre_defined     : #{@pre_defined}"
+      s += "\n " + " " * @depth + "handler_type    : #{@handler_type}"
+      s += "\n " + " " * @depth + "reserved        : #{@reserved.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
+      s += "\n " + " " * @depth + "name            : #{@name.join('')}"
+      s
+    end
   end
   
   class Box_minf < Box_no_fields
@@ -435,6 +450,14 @@ module BaseMedia
   
   class Box_stsdd < Box_no_fields
     # TODO ここだ！
+  end
+
+  class Box_meta < Box
+    def parse_payload(f)
+      parse_full_box(f)
+      @payload = BaseMedia::parse_boxes(f, @size, @depth+1)
+      @dirty   = false
+    end
   end
 
   
@@ -619,6 +642,9 @@ class Mp4File
       s += "#{b.to_s}\n"
     end
     s
+  end
+
+  class BaseMedia::Box_udta < BaseMedia::Box_no_fields
   end
 end
 
