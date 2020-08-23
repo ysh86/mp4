@@ -57,6 +57,7 @@ end
 
 
 module BaseMedia
+  # from 1904/1/1 to 1970/1/1
   MAC2UNIX = 2082844800
 
   def self.create_instance_of(classname, *init_args)
