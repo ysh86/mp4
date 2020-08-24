@@ -682,33 +682,58 @@ end
 
 
 ############### Main ##############
+def glob_files(files, argv)
+  argv.each do |path|
+    case File.ftype path
+    when "directory"
+      Dir.foreach(path) do |file|
+        # TODO ちょーーーいまいち
+        glob_files files, [File.join(path, file)] if file !~ /^\.\.?$/
+      end
+    when "file"
+      files << path if path =~ /\.(mp4|mov)$/i
+    end
+  end
+end
+
+# unix to mac time
+def fix_time(f, box)
+  if box.version == 0
+    format = "N"
+  else
+    format = "Q>"
+  end
+  # creation_time
+  puts "#{box.type}: from #{Time.at(box.creation_time-BaseMedia::MAC2UNIX).strftime("%F %T %z")} to #{Time.at(box.creation_time).strftime("%F %T %z")}"
+  f.seek box.offset + box.template[0].values[0][3]
+  f.write [box.creation_time + BaseMedia::MAC2UNIX].pack(format)
+  # modification_time
+  puts "#{box.type}: from #{Time.at(box.modification_time-BaseMedia::MAC2UNIX).strftime("%F %T %z")} to #{Time.at(box.modification_time).strftime("%F %T %z")}"
+  f.seek box.offset + box.template[1].values[0][3]
+  f.write [box.modification_time + BaseMedia::MAC2UNIX].pack(format)
+end
 
 if ARGV.length == 0
-  STDERR.print "usage: mp4mod.rb <MP4 file>\n"
+  STDERR.puts "usage: mp4mod.rb <files> ..."
   exit(1)
 end
 
-File.open(ARGV[0], "rb") do |f|
-  mp4_file = Mp4File.new(f, File::size(f.path))
+files = []
+glob_files(files, ARGV[0..-1])
 
-  movie = mp4_file.boxes[:moov].boxes[:mvhd]
-  track0 = mp4_file.boxes[:moov].boxes[:trak][0].boxes[:tkhd]
-  track1 = mp4_file.boxes[:moov].boxes[:trak][1].boxes[:tkhd]
-  media0 = mp4_file.boxes[:moov].boxes[:trak][0].boxes[:mdia].boxes[:mdhd]
-  media1 = mp4_file.boxes[:moov].boxes[:trak][1].boxes[:mdia].boxes[:mdhd]
+files.each do |file|
+  File.open(file, "r+b") do |f|
+    mp4_file = Mp4File.new(f, File::size(f.path))
 
-  puts "0x#{(movie.offset + movie.template[0].values[0][3]).to_s(16)}: " + movie.creation_time.to_s
-  puts "0x#{(movie.offset + movie.template[1].values[0][3]).to_s(16)}: " + movie.modification_time.to_s
-
-  puts "0x#{(track0.offset + track0.template[0].values[0][3]).to_s(16)}: " + track0.creation_time.to_s
-  puts "0x#{(track0.offset + track0.template[1].values[0][3]).to_s(16)}: " + track0.modification_time.to_s
-  puts "0x#{(track1.offset + track1.template[0].values[0][3]).to_s(16)}: " + track1.creation_time.to_s
-  puts "0x#{(track1.offset + track1.template[1].values[0][3]).to_s(16)}: " + track1.modification_time.to_s
-
-  puts "0x#{(media0.offset + media0.template[0].values[0][3]).to_s(16)}: " + media0.creation_time.to_s
-  puts "0x#{(media0.offset + media0.template[1].values[0][3]).to_s(16)}: " + media0.modification_time.to_s
-  puts "0x#{(media1.offset + media1.template[0].values[0][3]).to_s(16)}: " + media1.creation_time.to_s
-  puts "0x#{(media1.offset + media1.template[1].values[0][3]).to_s(16)}: " + media1.modification_time.to_s
-
-  puts mp4_file.to_s
+    puts file
+    if false
+      fix_time f, mp4_file.boxes[:moov].boxes[:mvhd]
+      fix_time f, mp4_file.boxes[:moov].boxes[:trak][0].boxes[:tkhd]
+      fix_time f, mp4_file.boxes[:moov].boxes[:trak][1].boxes[:tkhd]
+      fix_time f, mp4_file.boxes[:moov].boxes[:trak][0].boxes[:mdia].boxes[:mdhd]
+      fix_time f, mp4_file.boxes[:moov].boxes[:trak][1].boxes[:mdia].boxes[:mdhd]
+    else
+      puts mp4_file.to_s
+    end
+  end
 end
