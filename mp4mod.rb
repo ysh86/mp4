@@ -166,6 +166,9 @@ module BaseMedia
         field_num  = t.values[0][2]
         t.values[0].append(box_offset)
 
+        if field_size == :EOB
+          field_size = @size - box_offset
+        end
         if field_num == :EOB
           field_num = (@size - box_offset) / field_size
         end
@@ -434,20 +437,25 @@ module BaseMedia
   end
 
   class Box_hdlr < Box
-    TEMPLATE = [[
+    TEMPLATE = [
+      # Version 0
+      [
       {:pre_defined  => [4, "N" , 1   ]},
       {:handler_type => [4, "a*", 1   ]},
-      {:handler_type => [4, "a*", 1   ]},
-      {:reserved     => [4, "N" , 2   ]},
-      {:name         => [1, "C*", :EOB]},
-    ]]
+      {:reserved     => [4, "N" , 3   ]},
+      {:name         => [:EOB, "Z*", 1]},
+      ],
+      # dummy
+      [],
+    ]
 
     def fields_to_s(s)
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
       s += "\n " + " " * @depth + "pre_defined     : #{@pre_defined}"
       s += "\n " + " " * @depth + "handler_type    : #{@handler_type}"
       s += "\n " + " " * @depth + "reserved        : #{@reserved.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
-      s += "\n " + " " * @depth + "name            : #{@name.pack("U*")}"
+      s += "\n " + " " * @depth + "name            : #{@name}"
       s
     end
   end

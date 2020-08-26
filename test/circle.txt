@@ -1,3 +1,4 @@
+test/circle.mp4
 ftyp : 20, 0x8, false
  major_brand       : MSNV
  minor_version     : 20054113
@@ -50,7 +51,13 @@ moov : 6701, 0x51599a, false
     duration          : 330330
     language          : jpn
     pre_defined       : 0
-   hdlr : 44, 0x515abe, false
+   hdlr : 40, 0x515ac2, false
+    FullBox version : 0
+    FullBox flags   : 0, 0, 0
+    pre_defined     : 0
+    handler_type    : vide
+    reserved        : 0x0,0x0,0x0
+    name            : Video Media Handler
    minf : 3525, 0x515af2, false
     vmhd : 12, 0x515afa, false
     dinf : 28, 0x515b0e, false
@@ -93,7 +100,13 @@ moov : 6701, 0x51599a, false
     duration          : 527360
     language          : jpn
     pre_defined       : 0
-   hdlr : 44, 0x5169af, false
+   hdlr : 40, 0x5169b3, false
+    FullBox version : 0
+    FullBox flags   : 0, 0, 0
+    pre_defined     : 0
+    handler_type    : soun
+    reserved        : 0x0,0x0,0x0
+    name            : Sound Media Handler
    minf : 2379, 0x5169e3, false
     smhd : 8, 0x5169eb, false
     dinf : 28, 0x5169fb, false
