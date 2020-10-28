@@ -58,11 +58,6 @@ module BaseMedia
   # from 1904/1/1 to 1970/1/1
   MAC2UNIX = 2082844800
 
-  def self.create_instance_of(classname, *init_args)
-    classname.split("::").inject(Object){ |oldclass, name| oldclass.const_get(name) }.new(*init_args)
-  end
-
-
   def self.parse_boxes(f, size, depth=0)
     boxes = Array.new
 
@@ -100,7 +95,7 @@ module BaseMedia
 
     begin
       # TODO type が ASCII じゃなかったらエラーで止めるか？汚染文字列だから危険だよね？
-      box = create_instance_of("#{self.name}::Box_#{type}", type)
+      box = Class.const_get("#{self.name}::Box_#{type}").new(type)
     rescue
       box = Box.new(type)
     end
@@ -490,6 +485,9 @@ module BaseMedia
       @payload = BaseMedia::parse_boxes(f, @size, @depth+1)
       @dirty   = false
     end
+  end
+
+  class Box_udta < Box_no_fields
   end
 
 
