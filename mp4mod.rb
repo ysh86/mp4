@@ -71,6 +71,7 @@ module BaseMedia
     start_pos = f.tell
     while (f.tell - start_pos < size && f.eof? == false)
       self.parse_box(f, depth) do |b|
+        #puts b.to_s # debug log
         boxes.push b
       end
     end
@@ -164,7 +165,7 @@ module BaseMedia
         field_size = t.values[0][0]
         field_type = t.values[0][1]
         field_num  = t.values[0][2]
-        t.values[0].append(box_offset)
+        t.values[0].push(box_offset)
 
         if field_size == :EOB
           field_size = @size - box_offset
@@ -244,7 +245,7 @@ module BaseMedia
         if @boxes.has_key? s
           t = @boxes[s]
           if t.class == Array
-            @boxes[s].append(b)
+            @boxes[s].push(b)
           else
             @boxes[s] = [t,b]
           end
@@ -699,7 +700,7 @@ def glob_files(files, argv)
         glob_files files, [File.join(path, file)] if file !~ /^\.\.?$/
       end
     when "file"
-      files << path if path =~ /\.(mp4|mov)$/i
+      files << path if path =~ /\.(mp4|mov|f4v)$/i
     end
   end
 end
