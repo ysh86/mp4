@@ -2,18 +2,17 @@
 
 require_relative './mp4'
 
-def glob_files(files, argv)
+def glob_files(argv)
+  files = []
   argv.each do |path|
     case File.ftype path
     when "directory"
-      Dir.foreach(path) do |file|
-        # TODO ちょーーーいまいち
-        glob_files files, [File.join(path, file)] if file !~ /^\.\.?$/
-      end
+      files.concat Dir.glob(File.join(path, "**", "*.{mp4,mov,f4v}"))
     when "file"
       files << path if path =~ /\.(mp4|mov|f4v)$/i
     end
   end
+  files
 end
 
 # unix to mac time
@@ -39,14 +38,12 @@ if ARGV.length == 0
   exit(1)
 end
 
-files = []
-glob_files(files, ARGV[0..-1])
-
-files.each do |file|
+glob_files(ARGV[0..-1]).each do |file|
+  puts '----------------------------------------------------'
+  puts file
+  puts '----------------------------------------------------'
   File.open(file, "r+b") do |f|
     mp4_file = Mp4File.new(f, File::size(f.path))
-
-    puts file
     if false
       fix_time f, mp4_file.boxes[:moov].boxes[:mvhd]
       fix_time f, mp4_file.boxes[:moov].boxes[:trak][0].boxes[:tkhd]
