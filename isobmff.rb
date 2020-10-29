@@ -172,12 +172,12 @@ module BaseMedia
           case field_type
           when :NN
             # network byte order unsigned 64bit
-            fields = f.read(field_size).unpack("N")
+            fields = f.read(field_size).unpack("N2")
             field = (fields[0] << 32) + fields[1]
             box_offset += field_size
           when :NNq
             # network byte order signed 64bit
-            fields = f.read(field_size).unpack("N")
+            fields = f.read(field_size).unpack("N2")
             field = ((fields[0] << 32) + fields[1]).pack("q").unpack("q")[0]
             box_offset += field_size
           when :Nl
@@ -438,10 +438,10 @@ module BaseMedia
       p = 0
       for i in 1...@entry_count
         if @version == 1
-          fields = @entries[p...p+8].pack("C*").unpack("N")
+          fields = @entries[p...p+8].pack("C*").unpack("N2")
           segment_duration = (fields[0] << 32) + fields[1]
           p += 8
-          fields = @entries[p...p+8].pack("C*").unpack("N")
+          fields = @entries[p...p+8].pack("C*").unpack("N2")
           media_time = ((fields[0] << 32) + fields[1]).pack("q").unpack("q")[0]
           p += 8
         else
@@ -662,10 +662,11 @@ module BaseMedia
       # Version 0
       [
       {:track_ID                 => [4, "N", 1]},
+      {:optional_fields          => [1, "C", :EOB]},
       # all the following are optional fields
       #{:base_data_offset         => [8, :NN, 1]},
       #{:sample_description_index => [4, "N", 1]},
-      {:default_sample_duration  => [4, "N", 1]},
+      #{:default_sample_duration  => [4, "N", 1]},
       #{:default_sample_size      => [4, "N", 1]},
       #{:default_sample_flags     => [4, "N", 1]},
       ],
@@ -678,8 +679,36 @@ module BaseMedia
     def fields_to_s(s)
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "track_ID                : #{@track_ID}"
-      s += "\n " + " " * @depth + "default_sample_duration : #{@default_sample_duration}"
+      s += "\n " + " " * @depth + "track_ID                 : #{@track_ID}"
+
+      p = 0
+      if (@flags[2] & 0x01) != 0
+        fields = @optional_fields[p...p+8].pack("C*").unpack("N2")
+        base_data_offset = (fields[0] << 32) + fields[1]
+        p += 8
+        s += "\n " + " " * @depth + "base_data_offset         : #{base_data_offset}"
+      end
+      if (@flags[2] & 0x02) != 0
+        sample_description_index = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "sample_description_index : #{sample_description_index}"
+      end
+      if (@flags[2] & 0x08) != 0
+        default_sample_duration = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "default_sample_duration  : #{default_sample_duration}"
+      end
+      if (@flags[2] & 0x10) != 0
+        default_sample_size = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "default_sample_size      : #{default_sample_size}"
+      end
+      if (@flags[2] & 0x20) != 0
+        default_sample_flags = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "default_sample_flags     : #{default_sample_flags}"
+      end
+      s
     end
   end
 
