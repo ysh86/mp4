@@ -737,7 +737,7 @@ module BaseMedia
       [
       {:sample_count => [4, "N", 1]},
       # the following are optional fields
-      {:data_offset => [4, :Nl, 1]},
+      #{:data_offset => [4, :Nl, 1]},
       #{:first_sample_flags => [4, "N", 1]},
       # all fields in the following array are optional
       {:samples => [4, "N*", :EOB]},
@@ -746,7 +746,7 @@ module BaseMedia
       [
       {:sample_count => [4, "N", 1]},
       # the following are optional fields
-      {:data_offset => [4, :Nl, 1]},
+      #{:data_offset => [4, :Nl, 1]},
       #{:first_sample_flags => [4, "N", 1]},
       # all fields in the following array are optional
       {:samples => [4, "N*", :EOB]},
@@ -757,7 +757,51 @@ module BaseMedia
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
       s += "\n " + " " * @depth + "sample_count : #{@sample_count}"
-      s += "\n " + " " * @depth + "data_offset  : #{@data_offset}"
+
+      p = 0
+      if (@flags[2] & 0x01) != 0
+        data_offset = @samples[p...p+1].pack("l").unpack("l")[0]
+        p += 1
+        s += "\n " + " " * @depth + "data_offset        : #{data_offset}"
+      end
+      if (@flags[2] & 0x04) != 0
+        first_sample_flags = @samples[p]
+        p += 1
+        s += "\n " + " " * @depth + "first_sample_flags : #{first_sample_flags}"
+      end
+
+      sample_count.times do |i|
+        if (@flags[1] & 0x01) != 0
+          sample_duration = @samples[p]
+          p += 1
+        else
+          sample_duration = 'default'
+        end
+        if (@flags[1] & 0x02) != 0
+          sample_size = @samples[p]
+          p += 1
+        else
+          sample_size = 'default'
+        end
+        if (@flags[1] & 0x04) != 0
+          sample_flags = @samples[p]
+          p += 1
+        else
+          sample_flags = 'default'
+        end
+        if (@flags[1] & 0x08) != 0
+          if @version == 0
+            sample_composition_time_offset = @samples[p]
+          else
+            sample_composition_time_offset = @samples[p...p+1].pack("l").unpack("l")[0]
+          end
+          p += 1
+        else
+          sample_composition_time_offset = 'default'
+        end
+        s += "\n " + " " * @depth + "\##{i} : #{sample_duration},#{sample_size},#{sample_flags},#{sample_composition_time_offset}"
+      end
+      s
     end
   end
 
