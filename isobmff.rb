@@ -799,7 +799,7 @@ module BaseMedia
         else
           sample_composition_time_offset = 'default'
         end
-        s += "\n " + " " * @depth + "\##{i} : #{sample_duration},#{sample_size},#{sample_flags},#{sample_composition_time_offset}"
+        s += "\n " + " " * @depth + "[#{i}] #{sample_duration},#{sample_size},#{sample_flags},#{sample_composition_time_offset}"
       end
       s
     end
