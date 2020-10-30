@@ -163,19 +163,35 @@ module BaseMedia
         if field_size == :EOB
           field_size = @size - box_offset
         end
+        shall_be_array = false
         if field_num == :EOB
           field_num = (@size - box_offset) / field_size
+          shall_be_array = true
         end
 
         field = nil
-        if field_num == 1
-          if field_type != :NN
-            field = f.read(field_size).unpack(field_type)[0]
+        if field_num == 1 && !shall_be_array
+          case field_type
+          when :NN
+            # network byte order unsigned 64bit
+            fields = f.read(field_size).unpack("N2")
+            field = (fields[0] << 32) + fields[1]
+            box_offset += field_size
+          when :NNq
+            # network byte order signed 64bit
+            fields = f.read(field_size).unpack("N2")
+            field = ((fields[0] << 32) + fields[1]).pack("q").unpack("q")[0]
+            box_offset += field_size
+          when :Nl
+            # network byte order signed 32bit
+            field = f.read(field_size).unpack("N").pack("l").unpack("l")[0]
+            box_offset += field_size
+          when :ns
+            # network byte order signed 16bit
+            field = f.read(field_size).unpack("n").pack("s").unpack("s")[0]
             box_offset += field_size
           else
-            # 64bit network byte order
-            fields = f.read(field_size).unpack("N")
-            field = (fields[0] << 32) + fields[1]
+            field = f.read(field_size).unpack(field_type)[0]
             box_offset += field_size
           end
         else
@@ -341,7 +357,7 @@ module BaseMedia
       {:reserved          => [4, "N", 1]},
       {:duration          => [4, "N", 1]},
       {:reserved32        => [4, "N", 2]},
-      {:layer             => [2, "n", 1]},
+      {:layer             => [2, :ns, 1]},
       {:alternate_group   => [2, "n", 1]},
       {:volume            => [2, "n", 1]},
       {:reserved16        => [2, "n", 1]},
@@ -357,7 +373,7 @@ module BaseMedia
       {:reserved          => [4, "N", 1]},
       {:duration          => [8, :NN, 1]},
       {:reserved32        => [4, "N", 2]},
-      {:layer             => [2, "n", 1]},
+      {:layer             => [2, :ns, 1]},
       {:alternate_group   => [2, "n", 1]},
       {:volume            => [2, "n", 1]},
       {:reserved16        => [2, "n", 1]},
@@ -387,6 +403,66 @@ module BaseMedia
   end
 
   class Box_edts < Box_no_fields
+  end
+
+  class Box_elst < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:entry_count         => [4, "N", 1]},
+      {:segment_duration    => [4, "N", 1]},
+      {:media_time          => [4, :Nl, 1]},
+      {:media_rate_integer  => [2, "n", 1]},
+      {:media_rate_fraction => [2, "n", 1]},
+      {:entries             => [1, "C", :EOB]},
+      ],
+      # Version 1
+      [
+      {:entry_count         => [4, "N", 1]},
+      {:segment_duration    => [8, :NN, 1]},
+      {:media_time          => [8, :NNq, 1]},
+      {:media_rate_integer  => [2, "n", 1]},
+      {:media_rate_fraction => [2, "n", 1]},
+      {:entries             => [1, "C", :EOB]},
+      ],
+    ]
+
+    def fields_to_s(s)
+      i = 0
+      s += "\n " + " " * @depth + "FullBox version : #{@version}"
+      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s += "\n " + " " * @depth + "entry_count     : #{@entry_count}"
+      s += "\n " + " " * @depth + "[#{i}] segment_duration    : #{@segment_duration}"
+      s += "\n " + " " * @depth + "[#{i}] media_time          : #{@media_time}"
+      s += "\n " + " " * @depth + "[#{i}] media_rate_integer  : #{@media_rate_integer}"
+      s += "\n " + " " * @depth + "[#{i}] media_rate_fraction : #{@media_rate_fraction}"
+
+      p = 0
+      for i in 1...@entry_count
+        if @version == 1
+          fields = @entries[p...p+8].pack("C*").unpack("N2")
+          segment_duration = (fields[0] << 32) + fields[1]
+          p += 8
+          fields = @entries[p...p+8].pack("C*").unpack("N2")
+          media_time = ((fields[0] << 32) + fields[1]).pack("q").unpack("q")[0]
+          p += 8
+        else
+          segment_duration = @entries[p...p+4].pack("C*").unpack("N")[0]
+          p += 4
+          media_time = @entries[p...p+4].pack("C*").unpack("N").pack("l").unpack("l")[0]
+          p += 4
+        end
+        media_rate_integer = @entries[p...p+2].pack("C*").unpack("n")[0]
+        media_rate_fraction = @entries[p+2...p+4].pack("C*").unpack("n")[0]
+        p += 4
+
+        s += "\n " + " " * @depth + "[#{i}] segment_duration    : #{segment_duration}"
+        s += "\n " + " " * @depth + "[#{i}] media_time          : #{media_time}"
+        s += "\n " + " " * @depth + "[#{i}] media_rate_integer  : #{media_rate_integer}"
+        s += "\n " + " " * @depth + "[#{i}] media_rate_fraction : #{media_rate_fraction}"
+      end
+      s
+    end
   end
 
   class Box_mdia < Box_no_fields
@@ -520,7 +596,7 @@ module BaseMedia
       s += "\n " + " " * @depth + "default_sample_description_index : #{@default_sample_description_index}"
       s += "\n " + " " * @depth + "default_sample_duration          : #{@default_sample_duration}"
       s += "\n " + " " * @depth + "default_sample_size              : #{@default_sample_size}"
-      s += "\n " + " " * @depth + "default_sample_flags             : #{@default_sample_flags}"
+      s += "\n " + " " * @depth + "default_sample_flags             : #{sprintf("0x%08x",@default_sample_flags)}"
     end
   end
 
@@ -534,7 +610,7 @@ module BaseMedia
       {:first_offset               => [4, "N", 1]},
       {:reserved                   => [2, "n", 1]},
       {:reference_count            => [2, "n", 1]},
-      {:references                 => [4, "N*", :EOB]},
+      {:references                 => [4*3, "N3", :EOB]},
       ],
       # Version 1
       [
@@ -544,7 +620,7 @@ module BaseMedia
       {:first_offset               => [4, :NN, 1]},
       {:reserved                   => [2, "n", 1]},
       {:reference_count            => [2, "n", 1]},
-      {:references                 => [4, "N*", :EOB]},
+      {:references                 => [4*3, "N3", :EOB]},
       ],
     ]
 
@@ -557,6 +633,7 @@ module BaseMedia
       s += "\n " + " " * @depth + "first_offset               : #{@first_offset}"
       s += "\n " + " " * @depth + "reserved                   : #{@reserved}"
       s += "\n " + " " * @depth + "reference_count            : #{@reference_count}"
+      s += "\n " + " " * @depth + "  ..."
     end
   end
 
@@ -587,10 +664,11 @@ module BaseMedia
       # Version 0
       [
       {:track_ID                 => [4, "N", 1]},
+      {:optional_fields          => [1, "C", :EOB]},
       # all the following are optional fields
       #{:base_data_offset         => [8, :NN, 1]},
       #{:sample_description_index => [4, "N", 1]},
-      {:default_sample_duration  => [4, "N", 1]},
+      #{:default_sample_duration  => [4, "N", 1]},
       #{:default_sample_size      => [4, "N", 1]},
       #{:default_sample_flags     => [4, "N", 1]},
       ],
@@ -603,8 +681,36 @@ module BaseMedia
     def fields_to_s(s)
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "track_ID                : #{@track_ID}"
-      s += "\n " + " " * @depth + "default_sample_duration : #{@default_sample_duration}"
+      s += "\n " + " " * @depth + "track_ID                 : #{@track_ID}"
+
+      p = 0
+      if (@flags[2] & 0x01) != 0
+        fields = @optional_fields[p...p+8].pack("C*").unpack("N2")
+        base_data_offset = (fields[0] << 32) + fields[1]
+        p += 8
+        s += "\n " + " " * @depth + "base_data_offset         : #{base_data_offset}"
+      end
+      if (@flags[2] & 0x02) != 0
+        sample_description_index = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "sample_description_index : #{sample_description_index}"
+      end
+      if (@flags[2] & 0x08) != 0
+        default_sample_duration = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "default_sample_duration  : #{default_sample_duration}"
+      end
+      if (@flags[2] & 0x10) != 0
+        default_sample_size = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "default_sample_size      : #{default_sample_size}"
+      end
+      if (@flags[2] & 0x20) != 0
+        default_sample_flags = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
+        p += 4
+        s += "\n " + " " * @depth + "default_sample_flags     : #{sprintf("0x%08x",default_sample_flags)}"
+      end
+      s
     end
   end
 
@@ -633,19 +739,19 @@ module BaseMedia
       [
       {:sample_count => [4, "N", 1]},
       # the following are optional fields
-      {:data_offset => [4, "N", 1]},
+      #{:data_offset => [4, :Nl, 1]},
       #{:first_sample_flags => [4, "N", 1]},
       # all fields in the following array are optional
-      {:samples => [4, "N*", :EOB]},
+      {:samples => [4, "N", :EOB]},
       ],
       # Version 1
       [
       {:sample_count => [4, "N", 1]},
       # the following are optional fields
-      {:data_offset => [4, "N", 1]},
+      #{:data_offset => [4, :Nl, 1]},
       #{:first_sample_flags => [4, "N", 1]},
       # all fields in the following array are optional
-      {:samples => [4, "N*", :EOB]},
+      {:samples => [4, "N", :EOB]},
       ],
     ]
 
@@ -653,7 +759,51 @@ module BaseMedia
       s += "\n " + " " * @depth + "FullBox version : #{@version}"
       s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
       s += "\n " + " " * @depth + "sample_count : #{@sample_count}"
-      s += "\n " + " " * @depth + "data_offset  : 0x#{@data_offset.to_s(16)}"
+
+      p = 0
+      if (@flags[2] & 0x01) != 0
+        data_offset = @samples[p...p+1].pack("l").unpack("l")[0]
+        p += 1
+        s += "\n " + " " * @depth + "data_offset        : #{data_offset}"
+      end
+      if (@flags[2] & 0x04) != 0
+        first_sample_flags = @samples[p]
+        p += 1
+        s += "\n " + " " * @depth + "first_sample_flags : #{sprintf("0x%08x",first_sample_flags)}"
+      end
+
+      @sample_count.times do |i|
+        if (@flags[1] & 0x01) != 0
+          sample_duration = @samples[p]
+          p += 1
+        else
+          sample_duration = 'default'
+        end
+        if (@flags[1] & 0x02) != 0
+          sample_size = @samples[p]
+          p += 1
+        else
+          sample_size = 'default'
+        end
+        if (@flags[1] & 0x04) != 0
+          sample_flags = sprintf("0x%08x",@samples[p])
+          p += 1
+        else
+          sample_flags = 'default'
+        end
+        if (@flags[1] & 0x08) != 0
+          if @version == 0
+            sample_composition_time_offset = @samples[p]
+          else
+            sample_composition_time_offset = @samples[p...p+1].pack("l").unpack("l")[0]
+          end
+          p += 1
+        else
+          sample_composition_time_offset = 'default'
+        end
+        s += "\n " + " " * @depth + "[#{i}] #{sample_duration},#{sample_size},#{sample_flags},#{sample_composition_time_offset}"
+      end
+      s
     end
   end
 
