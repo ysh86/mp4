@@ -594,7 +594,7 @@ module BaseMedia
       s += "\n " + " " * @depth + "default_sample_description_index : #{@default_sample_description_index}"
       s += "\n " + " " * @depth + "default_sample_duration          : #{@default_sample_duration}"
       s += "\n " + " " * @depth + "default_sample_size              : #{@default_sample_size}"
-      s += "\n " + " " * @depth + "default_sample_flags             : #{@default_sample_flags}"
+      s += "\n " + " " * @depth + "default_sample_flags             : #{sprintf("0x%08x",@default_sample_flags)}"
     end
   end
 
@@ -706,7 +706,7 @@ module BaseMedia
       if (@flags[2] & 0x20) != 0
         default_sample_flags = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
         p += 4
-        s += "\n " + " " * @depth + "default_sample_flags     : #{default_sample_flags}"
+        s += "\n " + " " * @depth + "default_sample_flags     : #{sprintf("0x%08x",default_sample_flags)}"
       end
       s
     end
@@ -767,7 +767,7 @@ module BaseMedia
       if (@flags[2] & 0x04) != 0
         first_sample_flags = @samples[p]
         p += 1
-        s += "\n " + " " * @depth + "first_sample_flags : #{first_sample_flags}"
+        s += "\n " + " " * @depth + "first_sample_flags : #{sprintf("0x%08x",first_sample_flags)}"
       end
 
       sample_count.times do |i|
@@ -784,7 +784,7 @@ module BaseMedia
           sample_size = 'default'
         end
         if (@flags[1] & 0x04) != 0
-          sample_flags = @samples[p]
+          sample_flags = sprintf("0x%08x",@samples[p])
           p += 1
         else
           sample_flags = 'default'
