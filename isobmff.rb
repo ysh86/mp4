@@ -163,12 +163,14 @@ module BaseMedia
         if field_size == :EOB
           field_size = @size - box_offset
         end
+        shall_be_array = false
         if field_num == :EOB
           field_num = (@size - box_offset) / field_size
+          shall_be_array = true
         end
 
         field = nil
-        if field_num == 1
+        if field_num == 1 && !shall_be_array
           case field_type
           when :NN
             # network byte order unsigned 64bit
@@ -608,7 +610,7 @@ module BaseMedia
       {:first_offset               => [4, "N", 1]},
       {:reserved                   => [2, "n", 1]},
       {:reference_count            => [2, "n", 1]},
-      {:references                 => [4, "N*", :EOB]},
+      {:references                 => [4*3, "N3", :EOB]},
       ],
       # Version 1
       [
@@ -618,7 +620,7 @@ module BaseMedia
       {:first_offset               => [4, :NN, 1]},
       {:reserved                   => [2, "n", 1]},
       {:reference_count            => [2, "n", 1]},
-      {:references                 => [4, "N*", :EOB]},
+      {:references                 => [4*3, "N3", :EOB]},
       ],
     ]
 
@@ -740,7 +742,7 @@ module BaseMedia
       #{:data_offset => [4, :Nl, 1]},
       #{:first_sample_flags => [4, "N", 1]},
       # all fields in the following array are optional
-      {:samples => [4, "N*", :EOB]},
+      {:samples => [4, "N", :EOB]},
       ],
       # Version 1
       [
@@ -749,7 +751,7 @@ module BaseMedia
       #{:data_offset => [4, :Nl, 1]},
       #{:first_sample_flags => [4, "N", 1]},
       # all fields in the following array are optional
-      {:samples => [4, "N*", :EOB]},
+      {:samples => [4, "N", :EOB]},
       ],
     ]
 
@@ -770,7 +772,7 @@ module BaseMedia
         s += "\n " + " " * @depth + "first_sample_flags : #{sprintf("0x%08x",first_sample_flags)}"
       end
 
-      sample_count.times do |i|
+      @sample_count.times do |i|
         if (@flags[1] & 0x01) != 0
           sample_duration = @samples[p]
           p += 1
