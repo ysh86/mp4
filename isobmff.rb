@@ -217,22 +217,32 @@ module BaseMedia
       @offset = @offset + 4
     end
 
+    def header_to_s(s)
+      if @depth >= 0
+        s << ' ' * @depth + ((self.class == Box) ? '?' : '') + "#{@type} : #{@size}, 0x#{@offset.to_s(16)}, #{@dirty}"
+      else
+        s << "#{@type} : #{@size}"
+      end
+    end
+
     def fields_to_s(s)
       # do nothing
-      s
+    end
+
+    def payload_to_s(s)
+      if @payload.class == Array
+        @payload.each do |b|
+          s << "\n#{b.to_s}"
+        end
+      end
     end
 
     def to_s
-      unknown = (self.class == Box) ? '?' : ''
+      s = ''
 
-      s = ' ' * @depth + unknown + "#{@type} : #{@size}, 0x#{@offset.to_s(16)}, #{@dirty}"
-      s = fields_to_s(s)
-
-      if @payload.class == Array
-        @payload.each do |b|
-          s += "\n#{b.to_s}"
-        end
-      end
+      header_to_s(s)
+      fields_to_s(s)
+      payload_to_s(s)
 
       s
     end
@@ -269,12 +279,11 @@ module BaseMedia
     ]]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "major_brand       : #{@major_brand}"
-      s += "\n " + " " * @depth + "minor_version     : #{@minor_version}"
+      s << "\n " + " " * @depth + "major_brand       : #{@major_brand}"
+      s << "\n " + " " * @depth + "minor_version     : #{@minor_version}"
       @compatible_brands.each do |i|
-        s += "\n " + " " * @depth + "compatible_brands : #{i}"
+        s << "\n " + " " * @depth + "compatible_brands : #{i}"
       end
-      s
     end
   end
 
@@ -321,19 +330,19 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
-      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
-      s += "\n " + " " * @depth + "timescale         : #{@timescale}"
-      s += "\n " + " " * @depth + "duration          : #{@duration}"
-      s += "\n " + " " * @depth + "rate              : 0x#{@rate.to_s(16)}"
-      s += "\n " + " " * @depth + "volume            : 0x#{@volume.to_s(16)}"
-      s += "\n " + " " * @depth + "reserved16        : #{@reserved16}"
-      s += "\n " + " " * @depth + "reserved32        : #{@reserved32.join(', ')}"
-      s += "\n " + " " * @depth + "matrix            : #{@matrix.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
-      s += "\n " + " " * @depth + "pre_defined       : #{@pre_defined.join(', ')}"
-      s += "\n " + " " * @depth + "next_track_ID     : #{@next_track_ID}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
+      s << "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
+      s << "\n " + " " * @depth + "timescale         : #{@timescale}"
+      s << "\n " + " " * @depth + "duration          : #{@duration}"
+      s << "\n " + " " * @depth + "rate              : 0x#{@rate.to_s(16)}"
+      s << "\n " + " " * @depth + "volume            : 0x#{@volume.to_s(16)}"
+      s << "\n " + " " * @depth + "reserved16        : #{@reserved16}"
+      s << "\n " + " " * @depth + "reserved32        : #{@reserved32.join(', ')}"
+      s << "\n " + " " * @depth + "matrix            : #{@matrix.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
+      s << "\n " + " " * @depth + "pre_defined       : #{@pre_defined.join(', ')}"
+      s << "\n " + " " * @depth + "next_track_ID     : #{@next_track_ID}"
     end
   end
 
@@ -377,21 +386,21 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
-      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
-      s += "\n " + " " * @depth + "track_ID          : #{@track_ID}"
-      s += "\n " + " " * @depth + "reserved          : #{@reserved}"
-      s += "\n " + " " * @depth + "duration          : #{@duration}"
-      s += "\n " + " " * @depth + "reserved32        : #{@reserved32.join(', ')}"
-      s += "\n " + " " * @depth + "layer             : #{@layer}"
-      s += "\n " + " " * @depth + "alternate_group   : #{@alternate_group}"
-      s += "\n " + " " * @depth + "volume            : 0x#{@volume.to_s(16)}"
-      s += "\n " + " " * @depth + "reserved16        : #{@reserved16}"
-      s += "\n " + " " * @depth + "matrix            : #{@matrix.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
-      s += "\n " + " " * @depth + "width             : #{@width /65536.0}"
-      s += "\n " + " " * @depth + "height            : #{@height/65536.0}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
+      s << "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
+      s << "\n " + " " * @depth + "track_ID          : #{@track_ID}"
+      s << "\n " + " " * @depth + "reserved          : #{@reserved}"
+      s << "\n " + " " * @depth + "duration          : #{@duration}"
+      s << "\n " + " " * @depth + "reserved32        : #{@reserved32.join(', ')}"
+      s << "\n " + " " * @depth + "layer             : #{@layer}"
+      s << "\n " + " " * @depth + "alternate_group   : #{@alternate_group}"
+      s << "\n " + " " * @depth + "volume            : 0x#{@volume.to_s(16)}"
+      s << "\n " + " " * @depth + "reserved16        : #{@reserved16}"
+      s << "\n " + " " * @depth + "matrix            : #{@matrix.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
+      s << "\n " + " " * @depth + "width             : #{@width /65536.0}"
+      s << "\n " + " " * @depth + "height            : #{@height/65536.0}"
     end
   end
 
@@ -422,13 +431,13 @@ module BaseMedia
 
     def fields_to_s(s)
       i = 0
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "entry_count     : #{@entry_count}"
-      s += "\n " + " " * @depth + "[#{i}] segment_duration    : #{@segment_duration}"
-      s += "\n " + " " * @depth + "[#{i}] media_time          : #{@media_time}"
-      s += "\n " + " " * @depth + "[#{i}] media_rate_integer  : #{@media_rate_integer}"
-      s += "\n " + " " * @depth + "[#{i}] media_rate_fraction : #{@media_rate_fraction}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "entry_count     : #{@entry_count}"
+      s << "\n " + " " * @depth + "[#{i}] segment_duration    : #{@segment_duration}"
+      s << "\n " + " " * @depth + "[#{i}] media_time          : #{@media_time}"
+      s << "\n " + " " * @depth + "[#{i}] media_rate_integer  : #{@media_rate_integer}"
+      s << "\n " + " " * @depth + "[#{i}] media_rate_fraction : #{@media_rate_fraction}"
 
       p = 0
       for i in 1...@entry_count
@@ -449,12 +458,11 @@ module BaseMedia
         media_rate_fraction = @entries[p+2...p+4].pack("C*").unpack("n")[0]
         p += 4
 
-        s += "\n " + " " * @depth + "[#{i}] segment_duration    : #{segment_duration}"
-        s += "\n " + " " * @depth + "[#{i}] media_time          : #{media_time}"
-        s += "\n " + " " * @depth + "[#{i}] media_rate_integer  : #{media_rate_integer}"
-        s += "\n " + " " * @depth + "[#{i}] media_rate_fraction : #{media_rate_fraction}"
+        s << "\n " + " " * @depth + "[#{i}] segment_duration    : #{segment_duration}"
+        s << "\n " + " " * @depth + "[#{i}] media_time          : #{media_time}"
+        s << "\n " + " " * @depth + "[#{i}] media_rate_integer  : #{media_rate_integer}"
+        s << "\n " + " " * @depth + "[#{i}] media_rate_fraction : #{media_rate_fraction}"
       end
-      s
     end
   end
 
@@ -488,14 +496,14 @@ module BaseMedia
     end
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
-      s += "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
-      s += "\n " + " " * @depth + "timescale         : #{@timescale}"
-      s += "\n " + " " * @depth + "duration          : #{@duration}"
-      s += "\n " + " " * @depth + "language          : #{lang2ascii(@language)}"
-      s += "\n " + " " * @depth + "pre_defined       : #{@pre_defined}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "creation_time     : #{Time.at(@creation_time-MAC2UNIX).strftime("%F %T %z")}"
+      s << "\n " + " " * @depth + "modification_time : #{Time.at(@modification_time-MAC2UNIX).strftime("%F %T %z")}"
+      s << "\n " + " " * @depth + "timescale         : #{@timescale}"
+      s << "\n " + " " * @depth + "duration          : #{@duration}"
+      s << "\n " + " " * @depth + "language          : #{lang2ascii(@language)}"
+      s << "\n " + " " * @depth + "pre_defined       : #{@pre_defined}"
     end
   end
 
@@ -513,13 +521,12 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "pre_defined     : #{@pre_defined}"
-      s += "\n " + " " * @depth + "handler_type    : #{@handler_type}"
-      s += "\n " + " " * @depth + "reserved        : #{@reserved.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
-      s += "\n " + " " * @depth + "name            : #{@name}"
-      s
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "pre_defined     : #{@pre_defined}"
+      s << "\n " + " " * @depth + "handler_type    : #{@handler_type}"
+      s << "\n " + " " * @depth + "reserved        : #{@reserved.map{|i| "0x#{i.to_s(16)}"}.join(',')}"
+      s << "\n " + " " * @depth + "name            : #{@name}"
     end
   end
 
@@ -582,13 +589,13 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "track_ID                         : #{@track_ID}"
-      s += "\n " + " " * @depth + "default_sample_description_index : #{@default_sample_description_index}"
-      s += "\n " + " " * @depth + "default_sample_duration          : #{@default_sample_duration}"
-      s += "\n " + " " * @depth + "default_sample_size              : #{@default_sample_size}"
-      s += "\n " + " " * @depth + "default_sample_flags             : #{sprintf("0x%08x",@default_sample_flags)}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "track_ID                         : #{@track_ID}"
+      s << "\n " + " " * @depth + "default_sample_description_index : #{@default_sample_description_index}"
+      s << "\n " + " " * @depth + "default_sample_duration          : #{@default_sample_duration}"
+      s << "\n " + " " * @depth + "default_sample_size              : #{@default_sample_size}"
+      s << "\n " + " " * @depth + "default_sample_flags             : #{sprintf("0x%08x",@default_sample_flags)}"
     end
   end
 
@@ -617,15 +624,15 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "reference_ID               : #{@reference_ID}"
-      s += "\n " + " " * @depth + "timescale                  : #{@timescale}"
-      s += "\n " + " " * @depth + "earliest_presentation_time : #{@earliest_presentation_time}"
-      s += "\n " + " " * @depth + "first_offset               : #{@first_offset}"
-      s += "\n " + " " * @depth + "reserved                   : #{@reserved}"
-      s += "\n " + " " * @depth + "reference_count            : #{@reference_count}"
-      s += "\n " + " " * @depth + "  ..."
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "reference_ID               : #{@reference_ID}"
+      s << "\n " + " " * @depth + "timescale                  : #{@timescale}"
+      s << "\n " + " " * @depth + "earliest_presentation_time : #{@earliest_presentation_time}"
+      s << "\n " + " " * @depth + "first_offset               : #{@first_offset}"
+      s << "\n " + " " * @depth + "reserved                   : #{@reserved}"
+      s << "\n " + " " * @depth + "reference_count            : #{@reference_count}"
+      s << "\n " + " " * @depth + "  ..."
     end
   end
 
@@ -642,9 +649,9 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "sequence_number : #{@sequence_number}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "sequence_number : #{@sequence_number}"
     end
   end
 
@@ -671,38 +678,37 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "track_ID                 : #{@track_ID}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "track_ID                 : #{@track_ID}"
 
       p = 0
       if (@flags[2] & 0x01) != 0
         fields = @optional_fields[p...p+8].pack("C*").unpack("N2")
         base_data_offset = (fields[0] << 32) + fields[1]
         p += 8
-        s += "\n " + " " * @depth + "base_data_offset         : #{base_data_offset}"
+        s << "\n " + " " * @depth + "base_data_offset         : #{base_data_offset}"
       end
       if (@flags[2] & 0x02) != 0
         sample_description_index = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
         p += 4
-        s += "\n " + " " * @depth + "sample_description_index : #{sample_description_index}"
+        s << "\n " + " " * @depth + "sample_description_index : #{sample_description_index}"
       end
       if (@flags[2] & 0x08) != 0
         default_sample_duration = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
         p += 4
-        s += "\n " + " " * @depth + "default_sample_duration  : #{default_sample_duration}"
+        s << "\n " + " " * @depth + "default_sample_duration  : #{default_sample_duration}"
       end
       if (@flags[2] & 0x10) != 0
         default_sample_size = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
         p += 4
-        s += "\n " + " " * @depth + "default_sample_size      : #{default_sample_size}"
+        s << "\n " + " " * @depth + "default_sample_size      : #{default_sample_size}"
       end
       if (@flags[2] & 0x20) != 0
         default_sample_flags = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
         p += 4
-        s += "\n " + " " * @depth + "default_sample_flags     : #{sprintf("0x%08x",default_sample_flags)}"
+        s << "\n " + " " * @depth + "default_sample_flags     : #{sprintf("0x%08x",default_sample_flags)}"
       end
-      s
     end
   end
 
@@ -719,9 +725,9 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "baseMediaDecodeTime : #{@baseMediaDecodeTime}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "baseMediaDecodeTime : #{@baseMediaDecodeTime}"
     end
   end
 
@@ -748,20 +754,20 @@ module BaseMedia
     ]
 
     def fields_to_s(s)
-      s += "\n " + " " * @depth + "FullBox version : #{@version}"
-      s += "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
-      s += "\n " + " " * @depth + "sample_count : #{@sample_count}"
+      s << "\n " + " " * @depth + "FullBox version : #{@version}"
+      s << "\n " + " " * @depth + "FullBox flags   : #{@flags.join(', ')}"
+      s << "\n " + " " * @depth + "sample_count : #{@sample_count}"
 
       p = 0
       if (@flags[2] & 0x01) != 0
         data_offset = @samples[p...p+1].pack("l").unpack("l")[0]
         p += 1
-        s += "\n " + " " * @depth + "data_offset        : #{data_offset}"
+        s << "\n " + " " * @depth + "data_offset        : #{data_offset}"
       end
       if (@flags[2] & 0x04) != 0
         first_sample_flags = @samples[p]
         p += 1
-        s += "\n " + " " * @depth + "first_sample_flags : #{sprintf("0x%08x",first_sample_flags)}"
+        s << "\n " + " " * @depth + "first_sample_flags : #{sprintf("0x%08x",first_sample_flags)}"
       end
 
       @sample_count.times do |i|
@@ -793,9 +799,8 @@ module BaseMedia
         else
           sample_composition_time_offset = 'default'
         end
-        s += "\n " + " " * @depth + "[#{i}] #{sample_duration},#{sample_size},#{sample_flags},#{sample_composition_time_offset}"
+        s << "\n " + " " * @depth + "[#{i}] #{sample_duration},#{sample_size},#{sample_flags},#{sample_composition_time_offset}"
       end
-      s
     end
   end
 
