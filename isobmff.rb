@@ -110,7 +110,7 @@ module BaseMedia
     attr_reader :type
     attr_reader :size, :offset, :depth
     attr_reader :version, :flags
-    attr_reader :payload, :dirty
+    attr_reader :dirty
 
     TEMPLATE = [[]]
     def template()
@@ -131,7 +131,6 @@ module BaseMedia
       @version = 0
       @flags   = 0
 
-      @payload = nil
       @dirty   = true
     end
 
@@ -206,9 +205,7 @@ module BaseMedia
         self.class.send(:attr_reader, field_sym)
       end
 
-      # TODO @payload に保存するか skip するか？
       f.seek(@size - box_offset, IO::SEEK_CUR)
-      @payload = nil
       @dirty   = false
     end
 
@@ -229,9 +226,6 @@ module BaseMedia
       unknown = (self.class == Box) ? '?' : ''
 
       s = ' ' * @depth + unknown + "#{@type} : #{@size}, 0x#{@offset.to_s(16)}, #{@dirty}"
-
-      # TODO テンプレートに応じて自動出力もいいけど、可読性を上げるなら独自に書き出した方がいいね。timestamp とかね。
-      # TODO いや、基本自動出力で、個別対応したいものだけ独自だよね
       s = fields_to_s(s)
 
       if @payload.class == Array
@@ -245,7 +239,7 @@ module BaseMedia
   end
 
   class Box_no_fields < Box
-    attr_reader :boxes
+    attr_reader :payload, :boxes
     def parse_payload(f)
       @payload = BaseMedia::parse_boxes(f, @size, @depth+1)
       @boxes = {}
@@ -287,7 +281,6 @@ module BaseMedia
   class Box_mdat < Box
     def parse_payload(f)
       f.seek(@size, IO::SEEK_CUR)
-      @payload = nil
       @dirty   = false
     end
   end
@@ -555,11 +548,10 @@ module BaseMedia
     # TODO ここだ！
   end
 
-  class Box_meta < Box
+  class Box_meta < Box_no_fields
     def parse_payload(f)
       parse_full_box(f)
-      @payload = BaseMedia::parse_boxes(f, @size, @depth+1)
-      @dirty   = false
+      super(f)
     end
   end
 
