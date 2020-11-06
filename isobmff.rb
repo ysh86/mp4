@@ -232,18 +232,21 @@ module BaseMedia
     def payload_to_s(s)
       if @payload.class == Array
         @payload.each do |b|
-          s << "\n#{b.to_s}"
+          s << "\n"
+          b.box_to_s(s)
         end
       end
     end
 
-    def to_s
-      s = ''
-
+    def box_to_s(s)
       header_to_s(s)
       fields_to_s(s)
       payload_to_s(s)
+    end
 
+    def to_s
+      s = ''
+      box_to_s(s)
       s
     end
   end

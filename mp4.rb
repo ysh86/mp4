@@ -5,6 +5,7 @@ class Mp4File
 
   # alias
   def boxes() @root.boxes end
+  def box_to_s(s) @root.box_to_s(s) end
   def to_s() @root.to_s end
 
   def initialize(f, size)
