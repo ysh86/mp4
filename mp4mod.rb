@@ -51,7 +51,7 @@ glob_files(ARGV[0..-1]).each do |file|
       fix_time f, mp4_file.boxes[:moov].boxes[:trak][0].boxes[:mdia].boxes[:mdhd]
       fix_time f, mp4_file.boxes[:moov].boxes[:trak][1].boxes[:mdia].boxes[:mdhd]
     else
-      puts mp4_file.to_s
+      mp4_file.box_to_s(STDOUT)
     end
   end
 end
