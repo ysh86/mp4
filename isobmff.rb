@@ -157,7 +157,7 @@ module BaseMedia
         field_size = t.values[0][0]
         field_type = t.values[0][1]
         field_num  = t.values[0][2]
-        t.values[0].push(box_offset)
+        t.values[0].push(box_offset) # TODO: これダメ。[0][3] 固定でいい？バージョン混ざるとダメか。
 
         if field_size == :EOB
           field_size = @size - box_offset
@@ -558,21 +558,93 @@ module BaseMedia
     # TODO ここだ！
   end
 
-  class Box_meta < Box_no_fields
+  # TODO: meta
+  class Box_metaa < Box_no_fields
     def parse_payload(f)
       parse_full_box(f)
       super(f)
     end
   end
-
-  class Box_udta < Box_no_fields
+  # TODO: udta
+  class Box_udtaa < Box_no_fields
   end
 
+
+  class Box_styp < Box_ftyp
+  end
+
+  class Box_sidx < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:reference_ID               => [4, "N", 1]},
+      {:timescale                  => [4, "N", 1]},
+      {:earliest_presentation_time => [4, "N", 1]},
+      {:first_offset               => [4, "N", 1]},
+      {:reserved                   => [2, "n", 1]},
+      {:reference_count            => [2, "n", 1]},
+      {:references                 => [4*3, "N3", :EOB]},
+      ],
+      # Version 1
+      [
+      {:reference_ID               => [4, "N", 1]},
+      {:timescale                  => [4, "N", 1]},
+      {:earliest_presentation_time => [8, :NN, 1]},
+      {:first_offset               => [8, :NN, 1]},
+      {:reserved                   => [2, "n", 1]},
+      {:reference_count            => [2, "n", 1]},
+      {:references                 => [4, "N", :EOB]},
+      ],
+    ]
+
+    def fields_to_s(s)
+      s << " " * (1 + @depth) << "FullBox version : #{@version}" << "\n"
+      s << " " * (1 + @depth) << "FullBox flags   : #{@flags.join(', ')}" << "\n"
+      s << " " * (1 + @depth) << "reference_ID               : #{@reference_ID}" << "\n"
+      s << " " * (1 + @depth) << "timescale                  : #{@timescale}" << "\n"
+      s << " " * (1 + @depth) << "earliest_presentation_time : #{@earliest_presentation_time}" << "\n"
+      s << " " * (1 + @depth) << "first_offset               : #{@first_offset}" << "\n"
+      s << " " * (1 + @depth) << "reserved                   : #{@reserved}" << "\n"
+      s << " " * (1 + @depth) << "reference_count            : #{@reference_count}" << "\n"
+      for i in 0...@reference_count
+        reference_type = @references[i*3+0] >> 31
+        referenced_size = @references[i*3+0] & 0x7fffffff
+        subsegment_duration = @references[i*3+1]
+        starts_with_sap = @references[i*3+2] >> 31
+        sap_type = (@references[i*3+2] >> 28) & 7
+        sap_delta_time = @references[i*3+2] & 0x0fffffff
+
+        s << " " * (1 + @depth) << "[#{i}] reference_type      : #{reference_type}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] referenced_size     : #{referenced_size}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] subsegment_duration : #{subsegment_duration}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] starts_with_SAP     : #{starts_with_sap}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] SAP_type            : #{sap_type}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] SAP_delta_time      : #{sap_delta_time}" << "\n"
+      end
+    end
+  end
 
   class Box_moof < Box_no_fields
   end
 
   class Box_mvex < Box_no_fields
+  end
+
+  class Box_mehd < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:fragment_duration => [4, "N", 1]},
+      ],
+      # Version 1
+      [
+      {:fragment_duration => [8, :NN, 1]},
+      ],
+    ]
+
+    def fields_to_s(s)
+      s << " " * (1 + @depth) << "fragment_duration : #{@fragment_duration}" << "\n"
+    end
   end
 
   class Box_trex < Box
@@ -599,43 +671,13 @@ module BaseMedia
       s << " " * (1 + @depth) << "default_sample_duration          : #{@default_sample_duration}" << "\n"
       s << " " * (1 + @depth) << "default_sample_size              : #{@default_sample_size}" << "\n"
       s << " " * (1 + @depth) << "default_sample_flags             : #{sprintf("0x%08x",@default_sample_flags)}" << "\n"
-    end
-  end
-
-  class Box_sidx < Box
-    TEMPLATE = [
-      # Version 0
-      [
-      {:reference_ID               => [4, "N", 1]},
-      {:timescale                  => [4, "N", 1]},
-      {:earliest_presentation_time => [4, "N", 1]},
-      {:first_offset               => [4, "N", 1]},
-      {:reserved                   => [2, "n", 1]},
-      {:reference_count            => [2, "n", 1]},
-      {:references                 => [4*3, "N3", :EOB]},
-      ],
-      # Version 1
-      [
-      {:reference_ID               => [4, "N", 1]},
-      {:timescale                  => [4, "N", 1]},
-      {:earliest_presentation_time => [4, :NN, 1]},
-      {:first_offset               => [4, :NN, 1]},
-      {:reserved                   => [2, "n", 1]},
-      {:reference_count            => [2, "n", 1]},
-      {:references                 => [4*3, "N3", :EOB]},
-      ],
-    ]
-
-    def fields_to_s(s)
-      s << " " * (1 + @depth) << "FullBox version : #{@version}" << "\n"
-      s << " " * (1 + @depth) << "FullBox flags   : #{@flags.join(', ')}" << "\n"
-      s << " " * (1 + @depth) << "reference_ID               : #{@reference_ID}" << "\n"
-      s << " " * (1 + @depth) << "timescale                  : #{@timescale}" << "\n"
-      s << " " * (1 + @depth) << "earliest_presentation_time : #{@earliest_presentation_time}" << "\n"
-      s << " " * (1 + @depth) << "first_offset               : #{@first_offset}" << "\n"
-      s << " " * (1 + @depth) << "reserved                   : #{@reserved}" << "\n"
-      s << " " * (1 + @depth) << "reference_count            : #{@reference_count}" << "\n"
-      s << " " * (1 + @depth) << "  ..." << "\n"
+      s << " " * (1 + @depth) << "  is_leading                     : #{(@default_sample_flags>>26)&3}" << "\n"
+      s << " " * (1 + @depth) << "  sample_depends_on              : #{(@default_sample_flags>>24)&3}" << "\n"
+      s << " " * (1 + @depth) << "  sample_is_depended_on          : #{(@default_sample_flags>>22)&3}" << "\n"
+      s << " " * (1 + @depth) << "  sample_has_redundancy          : #{(@default_sample_flags>>20)&3}" << "\n"
+      s << " " * (1 + @depth) << "  sample_padding_value           : #{(@default_sample_flags>>17)&7}" << "\n"
+      s << " " * (1 + @depth) << "  sample_is_non_sync_sample      : #{(@default_sample_flags>>16)&1}" << "\n"
+      s << " " * (1 + @depth) << "  sample_degradation_priority    : #{@default_sample_flags&0xffff}" << "\n"
     end
   end
 
@@ -711,6 +753,19 @@ module BaseMedia
         default_sample_flags = @optional_fields[p...p+4].pack("C*").unpack("N")[0]
         p += 4
         s << " " * (1 + @depth) << "default_sample_flags     : #{sprintf("0x%08x",default_sample_flags)}" << "\n"
+        s << " " * (1 + @depth) << "  is_leading                     : #{(default_sample_flags>>26)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_depends_on              : #{(default_sample_flags>>24)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_is_depended_on          : #{(default_sample_flags>>22)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_has_redundancy          : #{(default_sample_flags>>20)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_padding_value           : #{(default_sample_flags>>17)&7}" << "\n"
+        s << " " * (1 + @depth) << "  sample_is_non_sync_sample      : #{(default_sample_flags>>16)&1}" << "\n"
+        s << " " * (1 + @depth) << "  sample_degradation_priority    : #{default_sample_flags&0xffff}" << "\n"
+        end
+      if (@flags[0] & 0x01) != 0
+        s << " " * (1 + @depth) << "duration-is-empty" << "\n"
+      end
+      if (@flags[0] & 0x02) != 0
+        s << " " * (1 + @depth) << "default-base-is-moof" << "\n"
       end
     end
   end
@@ -759,7 +814,7 @@ module BaseMedia
     def fields_to_s(s)
       s << " " * (1 + @depth) << "FullBox version : #{@version}" << "\n"
       s << " " * (1 + @depth) << "FullBox flags   : #{@flags.join(', ')}" << "\n"
-      s << " " * (1 + @depth) << "sample_count : #{@sample_count}" << "\n"
+      s << " " * (1 + @depth) << "sample_count       : #{@sample_count}" << "\n"
 
       p = 0
       if (@flags[2] & 0x01) != 0
@@ -771,6 +826,13 @@ module BaseMedia
         first_sample_flags = @samples[p]
         p += 1
         s << " " * (1 + @depth) << "first_sample_flags : #{sprintf("0x%08x",first_sample_flags)}" << "\n"
+        s << " " * (1 + @depth) << "  is_leading                     : #{(first_sample_flags>>26)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_depends_on              : #{(first_sample_flags>>24)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_is_depended_on          : #{(first_sample_flags>>22)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_has_redundancy          : #{(first_sample_flags>>20)&3}" << "\n"
+        s << " " * (1 + @depth) << "  sample_padding_value           : #{(first_sample_flags>>17)&7}" << "\n"
+        s << " " * (1 + @depth) << "  sample_is_non_sync_sample      : #{(first_sample_flags>>16)&1}" << "\n"
+        s << " " * (1 + @depth) << "  sample_degradation_priority    : #{first_sample_flags&0xffff}" << "\n"
       end
 
       @sample_count.times do |i|
