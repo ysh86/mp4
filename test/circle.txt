@@ -1,4 +1,7 @@
-test/circle.mp4
+----------------------------------------------------
+circle.mp4
+----------------------------------------------------
+_root : 5338055
 ftyp : 20, 0x8, false
  major_brand       : MSNV
  minor_version     : 20054113
@@ -40,7 +43,14 @@ moov : 6701, 0x51599a, false
    width             : 1280.0
    height            : 720.0
   edts : 28, 0x515a72, false
-   ?elst : 20, 0x515a7a, false
+   elst : 16, 0x515a7e, false
+    FullBox version : 0
+    FullBox flags   : 0, 0, 0
+    entry_count     : 1
+    [0] segment_duration    : 990990
+    [0] media_time          : 1001
+    [0] media_rate_integer  : 1
+    [0] media_rate_fraction : 0
   mdia : 3617, 0x515a96, false
    mdhd : 20, 0x515aa2, false
     FullBox version : 0
@@ -89,7 +99,18 @@ moov : 6701, 0x51599a, false
    width             : 0.0
    height            : 0.0
   edts : 40, 0x516957, false
-   ?elst : 32, 0x51695f, false
+   elst : 28, 0x516963, false
+    FullBox version : 0
+    FullBox flags   : 0, 0, 0
+    entry_count     : 2
+    [0] segment_duration    : 816
+    [0] media_time          : -1
+    [0] media_rate_integer  : 1
+    [0] media_rate_fraction : 0
+    [1] segment_duration    : 988800
+    [1] media_time          : 0
+    [1] media_rate_integer  : 1
+    [1] media_rate_fraction : 0
   mdia : 2471, 0x516987, false
    mdhd : 20, 0x516993, false
     FullBox version : 0
