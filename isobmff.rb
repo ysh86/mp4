@@ -869,4 +869,101 @@ module BaseMedia
     end
   end
 
+  class Box_mfra < Box_no_fields
+  end
+
+  class Box_tfra < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:track_ID               => [4, "N", 1]},
+      {:length_size            => [4, "N", 1]},
+      {:number_of_entry        => [4, "N", 1]},
+      {:entries                => [1, "C", :EOB]},
+      ],
+      # Version 1
+      [
+      {:track_ID               => [4, "N", 1]},
+      {:length_size            => [4, "N", 1]},
+      {:number_of_entry        => [4, "N", 1]},
+      {:entries                => [1, "C", :EOB]},
+      ],
+    ]
+
+    def fields_to_s(s)
+      size_of_traf_num = (@length_size >> 4) & 3
+      size_of_trun_num = (@length_size >> 2) & 3
+      size_of_sample_num = (@length_size & 3)
+
+      s << " " * (1 + @depth) << "FullBox version : #{@version}" << "\n"
+      s << " " * (1 + @depth) << "FullBox flags   : #{@flags.join(', ')}" << "\n"
+      s << " " * (1 + @depth) << "track_ID        : #{@track_ID}" << "\n"
+      s << " " * (1 + @depth) << "size_of_traf_num   : #{size_of_traf_num}" << "\n"
+      s << " " * (1 + @depth) << "size_of_trun_num   : #{size_of_trun_num}" << "\n"
+      s << " " * (1 + @depth) << "size_of_sample_num : #{size_of_sample_num}" << "\n"
+      s << " " * (1 + @depth) << "number_of_entry    : #{@number_of_entry}" << "\n"
+
+      p = 0
+      for i in 0...@number_of_entry
+        if @version == 1
+          fields = @entries[p...p+8].pack("C*").unpack("N2")
+          pts_in_media_timescale = (fields[0] << 32) + fields[1]
+          p += 8
+          fields = @entries[p...p+8].pack("C*").unpack("N2")
+          moof_offset = (fields[0] << 32) + fields[1]
+          p += 8
+        else
+          pts_in_media_timescale = @entries[p...p+4].pack("C*").unpack("N")[0]
+          p += 4
+          moof_offset = @entries[p...p+4].pack("C*").unpack("N")[0]
+          p += 4
+        end
+
+        traf_number = @entries[p]
+        p += 1
+        for i in 0...size_of_traf_num
+          traf_number = (traf_number << 8) + @entries[p]
+          p += 1
+        end
+
+        trun_number = @entries[p]
+        p += 1
+        for i in 0...size_of_trun_num
+          trun_number = (trun_number << 8) + @entries[p]
+          p += 1
+        end
+
+        sample_delta = @entries[p]
+        p += 1
+        for i in 0...size_of_sample_num
+          sample_delta = (sample_delta << 8) + @entries[p]
+          p += 1
+        end
+
+        s << " " * (1 + @depth) << "[#{i}] time(sync pts)        : #{pts_in_media_timescale}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] moof_offset           : #{moof_offset}" << "\n"
+        s << " " * (1 + @depth) << "[#{i}] traf,trun,sample_delta: #{traf_number},#{trun_number},#{sample_delta}" << "\n"
+      end
+    end
+  end
+
+  class Box_mfro < Box
+    TEMPLATE = [
+      # Version 0
+      [
+      {:parent_size     => [4, "N", 1]},
+      ],
+      # dummy
+      [
+      {:parent_size     => [4, "N", 1]},
+      ],
+    ]
+
+    def fields_to_s(s)
+      s << " " * (1 + @depth) << "FullBox version : #{@version}" << "\n"
+      s << " " * (1 + @depth) << "FullBox flags   : #{@flags.join(', ')}" << "\n"
+      s << " " * (1 + @depth) << "parent_size     : #{@parent_size}" << "\n"
+    end
+  end
+
 end # module BaseMedia
